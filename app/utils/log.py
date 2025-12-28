@@ -1,0 +1,31 @@
+import logging
+
+from rich.logging import RichHandler
+
+
+def get_logger(logger_name: str) -> logging.Logger:
+    """Create and configure a logger with Rich formatting.
+
+    Args:
+        logger_name: Name for the logger instance
+
+    Returns:
+        Configured logger instance
+    """
+    rich_handler = RichHandler(
+        show_time=False,
+        rich_tracebacks=False,
+        show_path=False,
+        tracebacks_show_locals=False
+    )
+    rich_handler.setFormatter(logging.Formatter(fmt='%(message)s', datefmt='[%X]'))
+
+    _logger = logging.getLogger(logger_name)
+    _logger.addHandler(rich_handler)
+    _logger.setLevel(logging.DEBUG)
+    _logger.propagate = False
+    return _logger
+
+
+logger: logging.Logger = get_logger('copilot')
+
