@@ -5,10 +5,10 @@ from datetime import datetime
 
 class ExpenseExtraction(BaseModel):
     amount: float
-    curency: Currencies = Currencies.USD
+    currency: Currencies = Currencies.USD
     merchant: str
     category: str
-    date: datetime | str
+    date: datetime
     description: Optional[str] = Field(default_factory=str, description="Description of expense")
     note: Optional[str] = Field(default_factory=str, description="Additional notes on transaction")
 
@@ -18,3 +18,9 @@ class ExpenseValidation(BaseModel):
     warnings: Optional[List[str]] = Field(default_factory=List[str], description="List of warnings occuring during expense validation")
     data: Optional[ExpenseExtraction] | dict[str, Any] = Field(default_factory=dict[str, Any], description="Parsed data. Can be either according to strictly parsed data OR default to dict structure")
 
+class ExpenseResponse(BaseModel):
+    success: str
+    message: str
+    expense_id: str
+    errors : Optional[List[str]] = Field(default_factory=List[str], description = "List of validation errors during expense extraction if any")
+    warnings: Optional[List[str]] = Field(default_factory=List[str], description = "List of validation warnings during expense extraction if any")

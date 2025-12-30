@@ -1,9 +1,3 @@
-import re
-import dateparser
-from app.utils.enums import Currencies
-
-from typing import Any, List
-
 def extract_amount(text: str):
     """
     Examples to handle:                                                                                                                                                                                        
@@ -12,7 +6,7 @@ def extract_amount(text: str):
       - "paid fifty dollars" → 50.0 (word to number)                                                                                                                                                             
       - "1,250.99 for rent" → 1250.99 
     """
-    return re.search("$(d+(?:.d+)?)", text)
+    pass
 
 def extract_currency(text: str):
     """
