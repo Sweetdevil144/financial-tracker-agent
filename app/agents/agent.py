@@ -1,21 +1,19 @@
 from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
-from langchain.messages import AIMessage
+
 from app.database.db import Database
-from app.models.agent import ExpenseExtraction, ExpenseValidation
+from app.models.agent import ExpenseExtraction, ExpenseResponse, ExpenseValidation
 from app.models.collections import Expenses
 from app.services.llm_services import LLMService
-
-class ProcessExpenseError(Exception):
-    pass
+from app.utils.log import logger
 
 
 class Agent:
     def __init__(self):
         self.llm_service = LLMService()
 
-    async def parse_expense(self, user_prompt: str) -> dict[str, Any] | AIMessage:
+    async def parse_expense(self, user_prompt: str) -> dict[str, Any]:
         #  Will later store it in prompt_registry within DB
         system_prompt = self._parse_expense_prompt()
         response = await self.llm_service.parse_structured(
@@ -25,9 +23,7 @@ class Agent:
         )
         return response
 
-    async def process_expense(
-        self, parsed_data: ExpenseExtraction
-    ) -> ExpenseValidation | dict[str, Any] | Any:
+    async def process_expense(self, parsed_data: ExpenseExtraction) -> ExpenseResponse:
         system_prompt = self._validation_prompt()
         user_prompt = parsed_data.model_dump_json()
         result = await self.llm_service.parse_structured(
@@ -35,21 +31,52 @@ class Agent:
             user_prompt=user_prompt,
             output_schema=ExpenseValidation,
         )
-        if isinstance(result, ExpenseValidation):
+        try:
+            result = ExpenseValidation.model_validate(result)
             if result.is_valid:
                 db = Database.get_database()
                 if db is None:
-                    return ProcessExpenseError("Database not initialized")
+                    return ExpenseResponse(
+                        success=False,
+                        message="Expense Insertion Failed due to Lack of DB Connection",
+                        expense_id=None,
+                    )
                 # Random user_id for now : Will be integrated in workflow laater on
                 # user_id, amount, currency, merchant, category, date, description, notes, tags
-                expense = Expenses(user_id = str(uuid4()), amount = parsed_data.amount, currency = parsed_data.currency, merchant = parsed_data.merchant, category=parsed_data.category, date=datetime.now(timezone.utc))
+                expense = Expenses(
+                    user_id=str(uuid4()),
+                    amount=parsed_data.amount,
+                    currency=parsed_data.currency,
+                    merchant=parsed_data.merchant,
+                    category=parsed_data.category,
+                    date=datetime.now(timezone.utc),
+                )
                 res = await db["expenses"].insert_one(expense.model_dump())
-                return res
+                return ExpenseResponse(
+                    success=True,
+                    message="Insertion successful",
+                    errors=result.errors,
+                    warnings=result.warnings,
+                    expense_id=res.inserted_id,
+                )
             else:
-                return ProcessExpenseError(f"Invalid Parsing : Trying Again. {result.errors}")
+                logger.warning(
+                    f"Invalid expense structure. Not inserting Data \nErrors : {result.errors}\nWarnings{result.warnings}"
+                )
+                return ExpenseResponse(
+                    success=False,
+                    message="Expense Insertion Failed",
+                    errors=result.errors,
+                    warnings=result.warnings,
+                    expense_id=None,
+                )
                 # Retry Logic : To be added later
-        # Default Case : dict[Str,Any] -> Fallback
-        return ProcessExpenseError("Error : Invalid Response recieved from OpenAI :Retrying again", result)
+        except Exception as e:
+            return ExpenseResponse(
+                success=False,
+                message=f"Expense Insertion Failed with error : {e}",
+                expense_id=None,
+            )
         # Secondary retyr logic maybe?
 
     def _validation_prompt(self) -> str:

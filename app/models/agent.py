@@ -19,8 +19,8 @@ class ExpenseValidation(BaseModel):
     data: Optional[ExpenseExtraction] | dict[str, Any] = Field(default_factory=dict[str, Any], description="Parsed data. Can be either according to strictly parsed data OR default to dict structure")
 
 class ExpenseResponse(BaseModel):
-    success: str
+    success: bool
     message: str
-    expense_id: str
+    expense_id: str | None
     errors : Optional[List[str]] = Field(default_factory=List[str], description = "List of validation errors during expense extraction if any")
     warnings: Optional[List[str]] = Field(default_factory=List[str], description = "List of validation warnings during expense extraction if any")
