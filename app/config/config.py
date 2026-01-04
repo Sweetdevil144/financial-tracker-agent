@@ -1,8 +1,11 @@
 import os
-from app.utils.log import logger
+
 from dotenv import load_dotenv
 
+from app.utils.log import logger
+
 load_dotenv()
+
 
 def get_secret(secret_name, default_value: str = ""):
     try:

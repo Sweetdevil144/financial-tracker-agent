@@ -7,7 +7,6 @@ from langchain_openai import AzureChatOpenAI
 from pydantic import BaseModel, SecretStr
 
 from app.config import config
-from app.models.agent import ExpenseExtraction, ExpenseValidation
 
 
 class LLMService:
@@ -37,17 +36,12 @@ class LLMService:
 
     async def chat(
         self, user_messages: str, system_prompt: str, response_format=None
-    ) -> dict[str, Any] | AIMessage:
+    ) -> AIMessage:
         system_msg = SystemMessage(system_prompt)
         human_msg = HumanMessage(user_messages)
         messages = [system_msg, human_msg]
 
-        if response_format:
-            res = await self.agent.with_structured_output(response_format).ainvoke(
-                messages
-            )
-        else:
-            res = await self.agent.ainvoke(messages)
+        res = await self.agent.ainvoke(messages)
 
         return res
 

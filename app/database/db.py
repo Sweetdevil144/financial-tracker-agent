@@ -21,7 +21,6 @@ class Database:
         logger.info("MongoDB client initialized Successfully")
         await Database.create_indexes()
 
-
     @staticmethod
     async def disconnect() -> None:
         if Database._client is not None:

@@ -13,7 +13,7 @@ class Expenses(BaseModel):
     description: Optional[str] = None
     merchant: str
     category: str
-    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    date: datetime | str = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     tags: List[str] = Field(default_factory=list)
     notes: Optional[str] = None
@@ -27,8 +27,8 @@ class Budgets(BaseModel):
     amount: float
     currency: Currencies
     period: BudgetPeriod
-    start_date: datetime
-    end_date: datetime
+    start_date: datetime | str
+    end_date: datetime | str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     description: Optional[str] = None
 

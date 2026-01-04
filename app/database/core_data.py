@@ -1,5 +1,5 @@
-from typing import Any, Union, Optional, List, Mapping
-from app.database.db import Database
+from typing import Any, List, Mapping, Optional, Union
+
 from pymongo.results import (
     DeleteResult,
     InsertManyResult,
@@ -7,11 +7,14 @@ from pymongo.results import (
     UpdateResult,
 )
 
+from app.database.db import Database
+
+
 async def update_one(
     collection_name: str,
     filter: Mapping[str, Any],
     update: Mapping[str, Any],
-    upsert: bool = False
+    upsert: bool = False,
 ) -> UpdateResult:
     """
     Update a single document in MongoDB.
@@ -31,103 +34,104 @@ async def update_one(
     db = Database.get_database()
     if db is None:
         raise RuntimeError(
-            'MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables.'
+            "MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables."
         )
 
     collection = db.get_collection(collection_name)
 
-    res = await collection.update_one(
-        filter=filter,
-        update=update,
-        upsert=upsert
-    )
+    res = await collection.update_one(filter=filter, update=update, upsert=upsert)
     return res
 
 
-async def delete(
-    collection_name: str,
-    filter: Mapping[str,Any]
-)-> DeleteResult:
+async def delete(collection_name: str, filter: Mapping[str, Any]) -> DeleteResult:
     """
-        Delete documents from a MongoDB collection.
-    
-        Args:
-            collection_name: Name of the collection to delete from
-            filter: Filter criteria to match documents for deletion
-    
-        Returns:
-            DeleteResult containing information about deleted documents
-    
-        Raises:
-            RuntimeError: If MongoDB is not configured
-        """
+    Delete documents from a MongoDB collection.
+
+    Args:
+        collection_name: Name of the collection to delete from
+        filter: Filter criteria to match documents for deletion
+
+    Returns:
+        DeleteResult containing information about deleted documents
+
+    Raises:
+        RuntimeError: If MongoDB is not configured
+    """
     db = Database.get_database()
     if db is None:
-        raise RuntimeError('MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables.')
+        raise RuntimeError(
+            "MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables."
+        )
 
     collection = db.get_collection(collection_name)
 
     res = await collection.delete_many(filter=filter)
-    
+
     return res
+
 
 async def insert_one(
     document: dict[str, Any],
     collection_name: str,
 ) -> InsertOneResult:
     """
-        Insert one document into MongoDB.
-        
-        Args:
-            document: Document to be inserted
-            collection_name: Name of the collection to query
+    Insert one document into MongoDB.
 
-        Returns:
-            The matching document or empty dict if not found
-        
-        Raises:
-            RuntimeError: If MongoDB is not configured
+    Args:
+        document: Document to be inserted
+        collection_name: Name of the collection to query
+
+    Returns:
+        The matching document or empty dict if not found
+
+    Raises:
+        RuntimeError: If MongoDB is not configured
     """
     db = Database.get_database()
     if db is None:
-        raise RuntimeError('MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables.')
+        raise RuntimeError(
+            "MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables."
+        )
 
     collection = db.get_collection(collection_name)
-    
+
     res = await collection.insert_one(document)
     return res
 
+
 async def insert_many(
-    documents : List[dict[str, Any]],
+    documents: List[dict[str, Any]],
     collection_name: str,
 ) -> InsertManyResult:
     """
-        Insert multiple documents into MongoDB.
-        
-        Args:
-            document: Document to be inserted
-            collection_name: Name of the collection to query
+    Insert multiple documents into MongoDB.
 
-        Returns:
-            The matching document or empty dict if not found
-        
-        Raises:
-            RuntimeError: If MongoDB is not configured
+    Args:
+        document: Document to be inserted
+        collection_name: Name of the collection to query
+
+    Returns:
+        The matching document or empty dict if not found
+
+    Raises:
+        RuntimeError: If MongoDB is not configured
     """
     db = Database.get_database()
     if db is None:
-        raise RuntimeError('MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables.')
+        raise RuntimeError(
+            "MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables."
+        )
 
     collection = db.get_collection(collection_name)
-    
+
     res = await collection.insert_many(documents=documents)
     return res
-    
+
 
 async def read_one(
     collection_name: str,
     data_filter: Union[dict[str, Any], str],
-    options: Optional[dict[str, Any]] = None
+    options: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """Read one document from MongoDB.
 
@@ -144,7 +148,9 @@ async def read_one(
     """
     db = Database.get_database()
     if db is None:
-        raise RuntimeError('MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables.')
+        raise RuntimeError(
+            "MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables."
+        )
 
     collection = db.get_collection(collection_name)
 
@@ -153,8 +159,7 @@ async def read_one(
 
 
 async def query_read(
-    collection_name: str,
-    aggregate: list[dict[str, Any]]
+    collection_name: str, aggregate: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
     """Execute an aggregation pipeline on MongoDB.
 
@@ -170,7 +175,9 @@ async def query_read(
     """
     db = Database.get_database()
     if db is None:
-        raise RuntimeError('MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables.')
+        raise RuntimeError(
+            "MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables."
+        )
 
     collection = db.get_collection(collection_name)
 
@@ -179,11 +186,14 @@ async def query_read(
 
     return await collection.aggregate(aggregate).to_list(None)
 
+
 @staticmethod
 async def list_collections() -> List[str]:
     """List all collections in the database."""
     db = Database.get_database()
     if db is None:
-        raise RuntimeError('MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables.')
+        raise RuntimeError(
+            "MongoDB is not configured. Set MONGO_URI and DATABASE_NAME environment variables."
+        )
 
     return await db.list_collection_names()

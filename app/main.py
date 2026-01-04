@@ -1,7 +1,10 @@
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from app.database.db import Database
+
+from fastapi import FastAPI
 from uvicorn import run
+
+from app.database.db import Database
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -9,13 +12,14 @@ async def lifespan(app: FastAPI):
     _db = await Database.connect()
     yield
     await Database.disconnect()
-    
+
+
 def create_app():
     app = FastAPI(
         title="Langchain Agent",
         docs_url="/docs",
         openapi_url="/openapi.json",
-        lifespan=lifespan
+        lifespan=lifespan,
     )
 
     @app.get("/")
@@ -23,6 +27,7 @@ def create_app():
         return {"message": "Hello World"}
 
     return app
+
 
 app = create_app()
 
