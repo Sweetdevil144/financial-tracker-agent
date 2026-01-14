@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+from uuid import uuid4
+
 from fastapi.exceptions import HTTPException
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
@@ -39,51 +41,56 @@ class Agent:
             output_schema=ExpenseValidation,
         )
         try:
+            expense_id = str(uuid4())
             result = ExpenseValidation.model_validate(result)
             if result.is_valid:
                 db = Database.get_database()
                 if db is None:
                     return ExpenseResponse(
-                        _id = "",
                         success=False,
                         message="Expense Insertion Failed due to Lack of DB Connection",
                         expense_id=None,
                     )
                 expense = Expenses(
-                    _id = parsed_data.id,
+                    _id=expense_id,
                     user_id=parsed_data.user_id,
                     amount=parsed_data.amount,
                     currency=parsed_data.currency,
                     merchant=parsed_data.merchant,
                     category=parsed_data.category,
                     date=parsed_data.date,
-                    created_at=str(datetime.now(timezone.utc))
+                    created_at=str(datetime.now(timezone.utc)),
                 )
-                res = await db["expenses"].insert_one(expense.model_dump())
+                res = await db["expenses"].insert_one(expense.model_dump(by_alias=True))
+                if res.acknowledged:
+                    return ExpenseResponse(
+                        expense_id=expense_id,
+                        success=True,
+                        message="Insertion successful",
+                        errors=result.errors,
+                        warnings=result.warnings,
+                    )
                 return ExpenseResponse(
-                    _id=parsed_data.id,
-                    success=True,
-                    message="Insertion successful",
+                    success=False,
+                    message="Expense Insertion Failed. Failed to acknowledge",
                     errors=result.errors,
                     warnings=result.warnings,
-                    expense_id=res.inserted_id,
+                    expense_id=expense_id,
                 )
             else:
                 logger.warning(
                     f"Invalid expense structure. Not inserting Data \nErrors : {result.errors}\nWarnings{result.warnings}"
                 )
                 return ExpenseResponse(
-                    _id = "",
                     success=False,
                     message="Expense Insertion Failed",
                     errors=result.errors,
                     warnings=result.warnings,
-                    expense_id=None,
+                    expense_id=expense_id,
                 )
                 # Retry Logic : To be added later
         except Exception as e:
             return ExpenseResponse(
-                _id="",
                 success=False,
                 message=f"Expense Insertion Failed with error : {e}",
                 expense_id=None,

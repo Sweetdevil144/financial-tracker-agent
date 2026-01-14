@@ -6,7 +6,6 @@ from app.utils.enums import Currencies
 
 
 class ExpenseExtraction(BaseModel):
-    _id: str = Field(alias="_id")
     user_id: str
     amount: float
     currency: Currencies = Currencies.USD
@@ -22,7 +21,6 @@ class ExpenseExtraction(BaseModel):
 
 
 class ExpenseValidation(BaseModel):
-    _id: str = Field(alias="_id")
     is_valid: bool
     errors: Optional[List[str]] = Field(
         default_factory=list,
@@ -39,7 +37,6 @@ class ExpenseValidation(BaseModel):
 
 
 class ExpenseResponse(BaseModel):
-    _id: str = Field(alias="_id")
     success: bool
     message: str
     expense_id: str | None

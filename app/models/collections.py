@@ -10,7 +10,7 @@ class Expenses(BaseModel):
     Collection = expenses
     """
 
-    _id: str = Field(alias="_id")
+    id: str = Field(alias="_id")
     user_id: str
     amount: float
     currency: Currencies
@@ -22,6 +22,7 @@ class Expenses(BaseModel):
     created_at: str
     tags: List[str] = Field(default_factory=list)
     notes: Optional[str] = None
+    model_config = {"populate_by_name": True}
 
 
 class Budgets(BaseModel):
@@ -29,7 +30,7 @@ class Budgets(BaseModel):
     Collection = budgets
     """
 
-    _id: str = Field(alias="_id")
+    id: str = Field(alias="_id")
     user_id: str
     category: str
     amount: float
@@ -40,6 +41,7 @@ class Budgets(BaseModel):
     end_date: str
     created_at: str
     description: Optional[str] = None
+    model_config = {"populate_by_name": True}
 
 
 class UserPreferences(BaseModel):
@@ -47,9 +49,10 @@ class UserPreferences(BaseModel):
     Collection = preferences
     """
 
-    _id: str = Field(alias="_id")
+    id: str = Field(alias="_id")
     user_id: str
     default_currency: str
     categories_list: List[str]
     timezone: str
     timezone_offset: Optional[str] = None
+    model_config = {"populate_by_name": True}

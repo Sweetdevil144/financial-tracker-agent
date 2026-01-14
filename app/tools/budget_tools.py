@@ -12,7 +12,8 @@ from app.utils.constants import Collection
 async def create_budget(budget_data: Budgets) -> InsertOneResult:
     try:
         return await insert_one(
-            collection_name=Collection.BUDGETS, document=budget_data.model_dump()
+            collection_name=Collection.BUDGETS,
+            document=budget_data.model_dump(by_alias=True),
         )
     except Exception as e:
         raise HTTPException(
@@ -63,9 +64,11 @@ async def update_budget(
 
 async def delete_budget(user_id: str, budget_id: str) -> UpdateResult:
     try:
-        filters = {"user_id": user_id, "budget_id": budget_id, "deleted": False}
+        filters = {"user_id": user_id, "_id": budget_id, "deleted": False}
         res = await update_one(
-            collection_name=Collection.BUDGETS, update={"deleted": True}, filter=filters
+            collection_name=Collection.BUDGETS,
+            update={"$set": {"deleted": True}},
+            filter=filters,
         )
         return res
     except Exception as e:
@@ -98,7 +101,7 @@ async def get_budget_status(user_id: str) -> List[dict[str, Any]]:
             utilization = (spent / budget.amount) * 100 if budget.amount > 0 else 0
             result.append(
                 {
-                    "budget_id": str(budget.id),
+                    "budget_id": budget.id,
                     "category": budget.category,
                     "period": budget.period.value,
                     "budget_amount": budget.amount,
