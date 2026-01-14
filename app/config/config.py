@@ -31,3 +31,6 @@ LANGCHAIN_TRACING = get_secret("LANGCHAIN_TRACING", "false") == "true"
 LANGCHAIN_API_KEY = get_secret("LANGCHAIN_API_KEY")
 LANGCHAIN_PROJECT = get_secret("LANGCHAIN_PROJECT", "cortex-agent-service")
 LANGCHAIN_ENDPOINT = get_secret("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
+
+JWT_SECRET = get_secret("JwtSecret")
+ENVIRONMENT = get_secret("ENVIRONMENT")

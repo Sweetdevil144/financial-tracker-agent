@@ -1,6 +1,5 @@
-from datetime import datetime, timezone
-from typing import Any
-from uuid import uuid4
+from fastapi.exceptions import HTTPException
+from starlette.status import HTTP_400_BAD_REQUEST
 
 from app.database.db import Database
 from app.models.agent import ExpenseExtraction, ExpenseResponse, ExpenseValidation
@@ -13,15 +12,22 @@ class Agent:
     def __init__(self):
         self.llm_service = LLMService()
 
-    async def parse_expense(self, user_prompt: str) -> dict[str, Any]:
+    async def parse_expense(self, user_prompt: str, user_id: str) -> ExpenseExtraction:
         #  Will later store it in prompt_registry within DB
         system_prompt = self._parse_expense_prompt()
         response = await self.llm_service.parse_structured(
             system_prompt=system_prompt,
-            user_prompt=user_prompt,
+            user_prompt=f" Expense Information : {user_prompt}. user_id : {user_id}",
             output_schema=ExpenseExtraction,
         )
-        return response
+        try:
+            response = ExpenseExtraction.model_validate(response)
+            return response
+        except Exception as e:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="Failed to parse expense correctly",
+            ) from e
 
     async def process_expense(self, parsed_data: ExpenseExtraction) -> ExpenseResponse:
         system_prompt = self._validation_prompt()
@@ -44,12 +50,12 @@ class Agent:
                 # Random user_id for now : Will be integrated in workflow laater on
                 # user_id, amount, currency, merchant, category, date, description, notes, tags
                 expense = Expenses(
-                    user_id=str(uuid4()),
+                    user_id=parsed_data.user_id,
                     amount=parsed_data.amount,
                     currency=parsed_data.currency,
                     merchant=parsed_data.merchant,
                     category=parsed_data.category,
-                    date=datetime.now(timezone.utc),
+                    date=parsed_data.date,
                 )
                 res = await db["expenses"].insert_one(expense.model_dump())
                 return ExpenseResponse(
@@ -77,7 +83,7 @@ class Agent:
                 message=f"Expense Insertion Failed with error : {e}",
                 expense_id=None,
             )
-        # Secondary retyr logic maybe?
+        # Secondary retry logic maybe?
 
     def _validation_prompt(self) -> str:
         return """
@@ -92,6 +98,40 @@ class Agent:
                         }
 
             The assistant must evaluate the data against the following rules:
+
+            1. **Amount**
+            - Alert if the amount is suspiciously high (e.g., > $10 000).
+            - A warning should be added to the `warnings` array if the amount exceeds $10 000.
+            - **If the amount is negative or zero**, add an error to the `errors` array stating
+              "Amount must be a positive number."
+
+            2. **Currency**
+            - Must be a valid ISO 4217 code.
+            - If the currency is missing or not recognized, report an error in the `errors` array.
+
+            3. **Category & Merchant**
+            - The category should logically match the merchant.
+            - If there is a mismatch or the category seems unrelated to the merchant, add a warning stating:
+                `"Category '{category}' does not fit typical merchants like '{merchant}'."`
+            - **If the merchant string is empty or only whitespace**, add an error to the `errors` array:
+              "Merchant name cannot be empty."
+
+            4. **Date**
+            - Must be a valid date string in YYYY‑MM‑DD format.
+            - The date cannot be in the future relative to the current date.
+            - If the date is missing, malformed, or in the future, add an error to `errors`.
+
+            **Response Format**
+            Return a JSON object that satisfies our internal **ExpenseValidation** schema as following:
+
+            ```json
+            {
+            "is_valid": true|false,
+            "errors": [ ... ], // array of error messages
+            "warnings": [ ... ], // array of warning messages
+            "data": { ... }// the original parsed data
+            }
+            The assistant must output **only** this JSON object—no additional text, comments, or formatting.
 
             1. **Amount**
             - Alert if the amount is suspiciously high (e.g., > $10 000).

@@ -13,3 +13,4 @@ class Currencies(Enum):
     EUR = "EUR"
     JPY = "JPY"
     GBP = "GBP"
+

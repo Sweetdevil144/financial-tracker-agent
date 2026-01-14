@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from models.collections import UserPreferences
+from app.models.collections import UserPreferences
 
 class User(BaseModel):
     id: str

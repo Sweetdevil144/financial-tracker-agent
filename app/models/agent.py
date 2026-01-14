@@ -7,9 +7,10 @@ from app.utils.enums import Currencies
 
 
 class ExpenseExtraction(BaseModel):
+    user_id: str
     amount: float
     currency: Currencies = Currencies.USD
-    merchant: str
+    merchant: Optional[str] = None
     category: str
     date: datetime | str
     description: Optional[str] = Field(

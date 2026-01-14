@@ -1,8 +1,12 @@
 # Personal Finance Intelligence Agent
 
+## Prompt
+
+This project is a SaaS application which I am building to get hands on experience coding with you as my guide helping me across problems like "What to do next", "How to do next", with minimal code support(almost nil code form your side). Only I will write code by my hand. Please analyze current progress on tools as past @Readme.md (use tree . to analyze complete repo instead of ls always. use cat to read files).Once you have analyzed current progress, please highlight current missing links, which i will complete at highest priority, then we will complete missing utilities in our application one at a time(Note that current get_current_user is only for dev mode, we will complete mising loinks later when integrating into APi routes). @Readme.md is sole TODO I need to follow and complete step by step, one step at a time.
+
 ## Product Overview
 
-An AI-powered expense tracking system that uses natural language processing to help users log expenses, analyze spending patterns, manage budgets, and receive financial insights through conversational interaction.
+An AI-powered expense tracking SaaS that uses Large Language Models to help users log expenses, analyze spending patterns, manage budgets, and receive financial insights through natural language interaction.
 
 ## Problem Statement
 
@@ -59,105 +63,149 @@ Most people fail to track expenses consistently due to friction in the process. 
 
 ## Technical Roadmap
 
-### Phase 1: Foundation (Day 1)
+### Phase 1: Foundation ✅ COMPLETED
 
 **Database Setup**
-- Set up MongoDB Atlas instance
-- Create collections with proper indexes
-- Design and implement schema validation
-- Create connection module with error handling
+- ✅ Set up MongoDB with Motor (async driver)
+- ✅ Create collections with proper indexes
+- ✅ Implement Pydantic schema validation
+- ✅ Create connection module with lazy initialization and error handling
 
 **Agent Architecture**
-- Initialize LangChain agent framework
-- Set up LLM connection (OpenAI/Anthropic/Ollama)
-- Create base agent configuration
-- Implement tool registry system
+- ✅ Initialize LangChain with Azure OpenAI
+- ✅ Set up structured output using Pydantic schemas
+- ✅ Create base Agent class with two-step AI workflow
+- ✅ Implement LLM service layer with retry logic
 
-**Basic Expense Tool**
-- Create add_expense tool structure
-- Implement basic MongoDB insertion
-- Add simple validation
-- Test with direct function calls
+**CRUD Operations**
+- ✅ Implement core database operations (insert_one, insert_many, read_one, query_read, update_one, delete)
+- ✅ Add comprehensive error handling
+- ✅ Create reusable functions for all tools
 
-### Phase 2: Natural Language Processing (Day 1-2)
+**User Context & Authentication**
+- ✅ JWT-based authentication
+- ✅ User context extraction from requests
+- ✅ Development mode with test user
 
-**NLP Parser**
-- Build amount extraction (regex + NLP)
-- Implement currency detection
-- Create date parsing (relative dates like "yesterday", "last week")
-- Extract merchant names from text
+### Phase 2: AI-Powered Parsing ✅ COMPLETED
 
-**Auto-Categorization**
-- Build keyword-based categorizer
-- Create merchant-to-category mapping
-- Implement fallback category logic
-- Add confidence scoring
+**Architecture Decision: Two-Agent AI Workflow**
 
-**Currency Handling**
-- Integrate currency conversion API
-- Implement caching for exchange rates
-- Add multi-currency display
-- Store both original and converted amounts
+Instead of regex-based parsing, this system uses a sophisticated two-agent AI approach:
 
-### Phase 3: Core Tools Implementation (Day 2)
+**Agent 1: Expense Parser (parse_expense)**
+- Accepts raw natural language text
+- Uses LLM with structured output to extract:
+  - Amount (float)
+  - Currency (ISO 4217 code)
+  - Merchant name
+  - Category (auto-categorized using AI understanding)
+  - Date (handles relative dates: "yesterday", "last Thursday", etc.)
+  - Optional: description and notes
+- Powered by external prompt template (parse_expense.md)
+- Returns validated ExpenseExtraction Pydantic model
 
-**Tool: add_expense**
-- Parse natural language input
-- Extract all required fields
-- Auto-categorize transaction
-- Handle currency conversion
-- Store in MongoDB
-- Return formatted confirmation
+**Agent 2: Validator & Processor (process_expense)**
+- Receives ExpenseExtraction from Agent 1
+- AI validates data against business rules:
+  - Amount validation (negative, zero, suspiciously high >$10,000)
+  - Currency code validation (ISO 4217)
+  - Category-merchant logical matching
+  - Date validation (no future dates, proper format)
+  - Empty merchant detection
+- Returns ExpenseValidation with is_valid flag, errors[], warnings[]
+- If valid: stores in MongoDB expenses collection
+- If invalid: returns detailed error messages
 
-**Tool: list_expenses**
-- Implement date range filtering
-- Add category filtering
-- Support amount range queries
-- Create sorting options
-- Format output for readability
+**Why AI Instead of Regex?**
+- **Better accuracy**: AI understands context ("fifty dollars" → $50.00)
+- **Handles ambiguity**: "coffee at Starbucks yesterday" → correctly extracts all fields
+- **Auto-categorization**: Merchant → Category mapping using semantic understanding
+- **Relative dates**: "last Thursday" → actual ISO date based on current date
+- **Extensible**: Easy to add new rules via prompt engineering
+- **Multi-language support**: Can be extended to non-English inputs
 
-**Tool: analyze_spending**
-- Calculate category totals
+### Phase 3: Core Tools Implementation 🔄 IN PROGRESS
+
+Tools are business logic wrappers around the Agent class. They orchestrate workflows and provide clean interfaces for API routes.
+
+**Tool: add_expense** (app/tools/expense_tools.py)
+- Accept user_id + raw natural language text
+- Call Agent.parse_expense(text) → ExpenseExtraction
+- Call Agent.process_expense(parsed_data) → ExpenseResponse
+- Return structured response with success/errors/warnings
+- Handle edge cases: empty input, LLM timeouts, DB failures
+
+**Tool: list_expenses** (app/tools/expense_tools.py)
+- Accept filters: user_id, date_range, category, merchant, amount_range
+- Build MongoDB aggregation pipeline
+- Support pagination (limit, offset)
+- Support sorting (by date, amount, merchant)
+- Return list of expense dictionaries with formatted dates
+
+**Tool: update_expense** (app/tools/expense_tools.py)
+- Accept expense_id + fields to update
+- Validate user owns the expense
+- Update specific fields (amount, merchant, category, etc.)
+- Return updated expense
+
+**Tool: delete_expense** (app/tools/expense_tools.py)
+- Accept user_id + expense_id
+- Validate ownership
+- Soft delete OR hard delete from MongoDB
+- Return success confirmation
+
+**Tool: analyze_spending** (app/tools/analytics_tools.py)
+- Calculate category-wise totals for time period
 - Generate percentage breakdowns
-- Implement time period comparisons
-- Identify top merchants
-- Create summary statistics
+- Month-over-month comparisons
+- Top N merchants by spending
+- Average daily/weekly/monthly spending
+- Use MongoDB aggregation framework
 
-**Tool: manage_budget**
-- Set/update category budgets
-- Calculate current utilization
-- Check against thresholds
-- Generate alert messages
-- Return budget status
+**Tool: manage_budget** (app/tools/budget_tools.py)
+- CRUD operations for budgets (create, read, update, delete)
+- Calculate current spending vs budget
+- Calculate utilization percentage
+- Flag warnings (>80%) and alerts (>100%)
+- Support multiple budget periods (weekly, monthly, yearly)
 
-**Tool: search_expenses**
-- Parse complex query requirements
-- Build MongoDB query from natural language
-- Support multiple filter combinations
-- Handle date range logic
-- Format search results
+**Tool: get_budget_status** (app/tools/budget_tools.py)
+- For each active budget, calculate current spending
+- Compare against budget amount
+- Return list with utilization percentages
+- Include warnings/alerts
 
-### Phase 4: Agent Integration (Day 2)
+### Phase 4: API Layer (FastAPI Routes) ⏳ PENDING
 
-**Agent Configuration**
-- Register all tools with descriptions
-- Configure tool selection strategy
-- Set up conversation memory
-- Implement context management
+**Expense Routes** (app/api/routes/expenses.py)
+- POST /api/v1/expenses - Add expense (calls add_expense tool)
+- GET /api/v1/expenses - List expenses with filters
+- GET /api/v1/expenses/{id} - Get single expense
+- PUT /api/v1/expenses/{id} - Update expense
+- DELETE /api/v1/expenses/{id} - Delete expense
+- All routes extract user_id from JWT token
 
-**Conversation Loop**
-- Create main interaction interface
-- Handle tool outputs
-- Format agent responses
-- Manage conversation state
-- Add exit conditions
+**Analytics Routes** (app/api/routes/analytics.py)
+- GET /api/v1/analytics/spending - Spending breakdown by category
+- GET /api/v1/analytics/trends - Month-over-month trends
+- GET /api/v1/analytics/merchants - Top merchants analysis
 
-**Error Handling**
-- Validate tool inputs
-- Handle MongoDB errors
-- Manage API failures
-- Provide user-friendly error messages
-- Implement retry logic for transient failures
+**Budget Routes** (app/api/routes/budgets.py)
+- POST /api/v1/budgets - Create budget
+- GET /api/v1/budgets - List all budgets for user
+- GET /api/v1/budgets/{id} - Get single budget
+- PUT /api/v1/budgets/{id} - Update budget
+- DELETE /api/v1/budgets/{id} - Delete budget
+- GET /api/v1/budgets/status - Get all budget statuses with utilization
+
+**Error Handling Middleware**
+- Global exception handler for all routes
+- Database connection error → 503
+- Validation errors → 422
+- LLM timeout → 500
+- Not found → 404
+- Unauthorized → 401
 
 ### Phase 5: Advanced Features (Day 3)
 
@@ -219,46 +267,73 @@ Most people fail to track expenses consistently due to friction in the process. 
 ## Technical Stack
 
 **Core Components**
-- Python 3.9+
-- LangChain (agent framework)
-- MongoDB Atlas (database)
-- OpenAI/Anthropic/Ollama (LLM)
+- Python 3.11+
+- FastAPI (async web framework)
+- LangChain (LLM orchestration)
+- Azure OpenAI (GPT-4 with structured output)
+- MongoDB Atlas with Motor (async database driver)
+- Pydantic v2 (data validation)
 
-**Required Libraries**
-- pymongo (database driver)
-- python-dotenv (configuration)
-- langchain-openai or langchain-anthropic
-- dateparser (date handling)
-- forex-python (currency conversion)
+**Key Libraries**
+- `motor` - Async MongoDB driver
+- `langchain-openai` - Azure OpenAI integration
+- `python-dotenv` - Environment configuration
+- `pyjwt` - JWT authentication
+- `uvicorn` - ASGI server
+- `pydantic` - Schema validation
 
-**Optional Enhancements**
-- streamlit (UI framework)
-- pandas (data analysis)
-- plotly (visualizations)
-- rich (CLI formatting)
+**Architecture Patterns**
+- Two-agent AI workflow (parse → validate → store)
+- Structured output using Pydantic schemas
+- Async/await throughout (non-blocking I/O)
+- Repository pattern (CRUD layer abstraction)
+- JWT-based authentication
+- External prompt management (markdown files)
 
 ## Project Structure
 
 ```
-fintech-agent/
-├── src/
-│   ├── agent.py              # Main agent orchestration
-│   ├── tools/
-│   │   ├── expense_tools.py  # Expense CRUD operations
-│   │   ├── analytics_tools.py # Analytics and insights
-│   │   └── budget_tools.py    # Budget management
+agent/
+├── app/
+│   ├── agents/
+│   │   └── agent.py              # Two-agent AI workflow (parse + validate)
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── routes/
+│   │       ├── __init__.py
+│   │       ├── expenses.py       # Expense CRUD endpoints (TODO)
+│   │       ├── analytics.py      # Analytics endpoints (TODO)
+│   │       └── budgets.py        # Budget endpoints (TODO)
+│   ├── config/
+│   │   ├── config.py             # Environment config & secrets
+│   │   └── exceptions.py         # Custom exceptions
 │   ├── database/
-│   │   ├── connection.py     # MongoDB connection
-│   │   └── models.py         # Schema definitions
+│   │   ├── db.py                 # MongoDB connection (Motor)
+│   │   └── core_data.py          # CRUD operations layer
+│   ├── models/
+│   │   ├── agent.py              # AI agent schemas (ExpenseExtraction, etc.)
+│   │   ├── collections.py        # MongoDB document schemas
+│   │   └── user.py               # User model
+│   ├── prompts/
+│   │   ├── parse_expense.md      # LLM prompt for expense parsing
+│   │   └── process_expense.md    # LLM prompt for validation
+│   ├── services/
+│   │   ├── llm_services.py       # LangChain + Azure OpenAI integration
+│   │   └── user_context.py       # JWT authentication & user extraction
+│   ├── static/
+│   │   └── localization.py       # Error messages
+│   ├── tests/
+│   │   └── test_agent.py         # Unit tests (TODO)
+│   ├── tools/
+│   │   ├── expense_tools.py      # Business logic for expenses (TODO)
+│   │   ├── analytics_tools.py    # Analytics logic (TODO)
+│   │   └── budget_tools.py       # Budget management logic (TODO)
 │   ├── utils/
-│   │   ├── nlp_parser.py     # Text parsing utilities
-│   │   ├── categorizer.py    # Categorization logic
-│   │   └── currency.py       # Currency conversion
-│   └── config.py             # Configuration management
-├── app.py                    # CLI entry point
-├── streamlit_app.py          # Web UI (optional)
+│   │   ├── enums.py              # Currencies, BudgetPeriod enums
+│   │   └── log.py                # Logging configuration
+│   └── main.py                   # FastAPI app entry point
 ├── requirements.txt
-├── .env.example
+├── .env
 └── README.md
 ```
 
@@ -285,29 +360,48 @@ fintech-agent/
 
 ## Key Design Decisions
 
-**Why LangChain**
-- Simplifies agent-tool interaction
-- Handles LLM orchestration
-- Provides conversation memory
-- Extensible tool system
+**Why AI-Powered Parsing (vs Regex)**
+- **Context understanding**: "fifty bucks at Starbucks" → correctly extracts all fields
+- **Auto-categorization**: Semantic understanding of merchant → category mapping
+- **Relative dates**: "yesterday", "last Friday" → actual ISO dates
+- **Extensibility**: New rules via prompt engineering, not code changes
+- **Accuracy**: Handles ambiguous inputs better than regex patterns
+- **Validation**: AI validates business logic (category-merchant match, future dates)
+
+**Why Two-Agent Architecture**
+- **Separation of concerns**: Parsing vs validation as distinct responsibilities
+- **Better error handling**: Detailed errors/warnings from validation agent
+- **Testability**: Each agent can be tested independently
+- **Prompt specialization**: Each agent has focused, optimized prompts
+- **Flexibility**: Can swap/upgrade agents independently
+
+**Why LangChain + Azure OpenAI**
+- Structured output via Pydantic (guarantees valid JSON)
+- Built-in retry logic and error handling
+- Azure enterprise compliance and security
+- Reasoning capabilities for complex validation
+- Easy integration with FastAPI async patterns
 
 **Why MongoDB**
 - Flexible schema for evolving features
-- Strong aggregation framework for analytics
-- Easy date-based queries
-- Good Python integration
+- Powerful aggregation framework (perfect for analytics)
+- Excellent date-based query performance
+- Motor provides async driver (matches FastAPI)
+- JSON-like documents (natural fit for Pydantic models)
 
-**Why Natural Language Processing**
-- Reduces friction in expense entry
-- Makes system accessible to non-technical users
-- Enables conversational interaction
-- Differentiates from traditional expense trackers
+**Why FastAPI**
+- Native async/await support (non-blocking I/O)
+- Automatic OpenAPI documentation
+- Pydantic integration for request/response validation
+- High performance (comparable to Node.js)
+- Modern Python best practices
 
 **Tool Design Philosophy**
+- Tools are thin wrappers around Agent + database operations
 - Each tool has single responsibility
-- Tools are composable
-- Clear input/output contracts
-- Comprehensive error handling
+- Tools handle business logic, not AI logic (AI is in Agent)
+- Clear input/output contracts using Pydantic
+- Comprehensive error handling and logging
 
 ## Success Metrics
 
