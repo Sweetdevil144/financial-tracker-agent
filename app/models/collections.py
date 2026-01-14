@@ -1,12 +1,16 @@
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
-from datetime import datetime, timezone
+
 from app.utils.enums import BudgetPeriod, Currencies
+
 
 class Expenses(BaseModel):
     """
     Collection = expenses
     """
+
+    _id: str = Field(alias="_id")
     user_id: str
     amount: float
     currency: Currencies
@@ -14,33 +18,38 @@ class Expenses(BaseModel):
     merchant: Optional[str] = None
     category: str
     deleted: bool = False
-    date: datetime | str = Field(default_factory=lambda: datetime.now(timezone.utc))
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    date: str
+    created_at: str
     tags: List[str] = Field(default_factory=list)
     notes: Optional[str] = None
+
 
 class Budgets(BaseModel):
     """
     Collection = budgets
     """
+
+    _id: str = Field(alias="_id")
     user_id: str
     category: str
     amount: float
     currency: Currencies
     deleted: bool = False
     period: BudgetPeriod
-    start_date: datetime | str
-    end_date: datetime | str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    start_date: str
+    end_date: str
+    created_at: str
     description: Optional[str] = None
+
 
 class UserPreferences(BaseModel):
     """
     Collection = preferences
     """
+
+    _id: str = Field(alias="_id")
     user_id: str
-    default_currency : str
+    default_currency: str
     categories_list: List[str]
     timezone: str
     timezone_offset: Optional[str] = None
-    

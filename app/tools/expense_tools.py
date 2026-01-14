@@ -15,6 +15,7 @@ async def add_expense(user_id: str, text: str) -> ExpenseResponse:
     if not text:
         logger.error("Error processing text")
         return ExpenseResponse(
+            _id="",
             success=False,
             message="No Text Provided for expense parsing",
             expense_id=None,
@@ -34,7 +35,7 @@ async def add_expense(user_id: str, text: str) -> ExpenseResponse:
     except Exception as e:
         logger.error(f"Error adding expense: {str(e)}")
         return ExpenseResponse(
-            success=False, message=f"Failed to add expense: {str(e)}", expense_id=None
+            _id="",success=False, message=f"Failed to add expense: {str(e)}", expense_id=None
         )
 
 

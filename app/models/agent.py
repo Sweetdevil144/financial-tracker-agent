@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
@@ -7,12 +6,13 @@ from app.utils.enums import Currencies
 
 
 class ExpenseExtraction(BaseModel):
+    _id: str = Field(alias="_id")
     user_id: str
     amount: float
     currency: Currencies = Currencies.USD
     merchant: Optional[str] = None
     category: str
-    date: datetime | str
+    date: str
     description: Optional[str] = Field(
         default_factory=str, description="Description of expense"
     )
@@ -22,6 +22,7 @@ class ExpenseExtraction(BaseModel):
 
 
 class ExpenseValidation(BaseModel):
+    _id: str = Field(alias="_id")
     is_valid: bool
     errors: Optional[List[str]] = Field(
         default_factory=list,
@@ -38,6 +39,7 @@ class ExpenseValidation(BaseModel):
 
 
 class ExpenseResponse(BaseModel):
+    _id: str = Field(alias="_id")
     success: bool
     message: str
     expense_id: str | None

@@ -1,5 +1,6 @@
+from datetime import datetime, timezone
 from fastapi.exceptions import HTTPException
-from starlette.status import HTTP_400_BAD_REQUEST
+from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 from app.database.db import Database
 from app.models.agent import ExpenseExtraction, ExpenseResponse, ExpenseValidation
@@ -25,7 +26,7 @@ class Agent:
             return response
         except Exception as e:
             raise HTTPException(
-                status_code=HTTP_400_BAD_REQUEST,
+                status_code=HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to parse expense correctly",
             ) from e
 
@@ -43,22 +44,24 @@ class Agent:
                 db = Database.get_database()
                 if db is None:
                     return ExpenseResponse(
+                        _id = "",
                         success=False,
                         message="Expense Insertion Failed due to Lack of DB Connection",
                         expense_id=None,
                     )
-                # Random user_id for now : Will be integrated in workflow laater on
-                # user_id, amount, currency, merchant, category, date, description, notes, tags
                 expense = Expenses(
+                    _id = parsed_data.id,
                     user_id=parsed_data.user_id,
                     amount=parsed_data.amount,
                     currency=parsed_data.currency,
                     merchant=parsed_data.merchant,
                     category=parsed_data.category,
                     date=parsed_data.date,
+                    created_at=str(datetime.now(timezone.utc))
                 )
                 res = await db["expenses"].insert_one(expense.model_dump())
                 return ExpenseResponse(
+                    _id=parsed_data.id,
                     success=True,
                     message="Insertion successful",
                     errors=result.errors,
@@ -70,6 +73,7 @@ class Agent:
                     f"Invalid expense structure. Not inserting Data \nErrors : {result.errors}\nWarnings{result.warnings}"
                 )
                 return ExpenseResponse(
+                    _id = "",
                     success=False,
                     message="Expense Insertion Failed",
                     errors=result.errors,
@@ -79,6 +83,7 @@ class Agent:
                 # Retry Logic : To be added later
         except Exception as e:
             return ExpenseResponse(
+                _id="",
                 success=False,
                 message=f"Expense Insertion Failed with error : {e}",
                 expense_id=None,
