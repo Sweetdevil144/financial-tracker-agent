@@ -5,6 +5,7 @@ class BudgetPeriod(Enum):
     MONTHLY = "monthly"
     YEARLY = "yearly"
     WEEKLY = "weekly"
+    DAILY = "daily"
 
 
 class Currencies(Enum):

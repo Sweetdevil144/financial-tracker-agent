@@ -2,6 +2,7 @@ from typing import Any, List
 
 from app.database.core_data import query_read
 from app.utils.constants import Collection
+from app.utils.enums import BudgetPeriod
 
 
 async def analyze_spendings(
@@ -74,7 +75,10 @@ async def get_spending_trends(
         },
         {
             "$group": {
-                "_id": {"year": {"$year": "$date"}, "month": {"$month": "$date"}},
+                "_id": {
+                    "year": {"$year": {"$dateFromString": {"dateString": "$date"}}},
+                    "month": {"$month": {"$dateFromString": {"dateString": "$date"}}},
+                },
                 "total": {"$sum": "$amount"},
                 "count": {"$sum": 1},
             }
@@ -82,3 +86,44 @@ async def get_spending_trends(
         {"$sort": {"_id.year": 1, "_id.month": 1}},
     ]
     return await query_read(collection_name=Collection.EXPENSES, aggregate=pipeline)
+
+
+async def get_average_spending(user_id: str, period: BudgetPeriod):
+    if period == BudgetPeriod.YEARLY:
+        group_id = {"year": {"$year": {"$dateFromString": {"dateString": "$date"}}}}
+    elif period == BudgetPeriod.MONTHLY:
+        group_id = {
+            "year": {"$year": {"$dateFromString": {"dateString": "$date"}}},
+            "month": {"$month": {"$dateFromString": {"dateString": "$date"}}},
+        }
+    elif period == BudgetPeriod.WEEKLY:
+        group_id = {
+            "year": {"$year": {"$dateFromString": {"dateString": "$date"}}},
+            "week": {"$isoWeek": {"$dateFromString": {"dateString": "$date"}}},
+        }
+    else:
+        group_id = {
+            "year": {"$year": {"$dateFromString": {"dateString": "$date"}}},
+            "month": {"$month": {"$dateFromString": {"dateString": "$date"}}},
+            "day": {"$dayOfMonth": {"$dateFromString": {"dateString": "$date"}}},
+        }
+    pipeline = [
+        {
+            "$match": {
+                "user_id": user_id,
+                "deleted": False,
+            }
+        },
+        {"$group": {"_id": group_id, "period_total": {"$sum": "$amount"}}},
+        {
+            "$group": {
+                "_id": None,
+                "average": {"$avg": "$period_total"},
+                "periods_count": {"$sum": 1},
+            }
+        },
+    ]
+    expenses = await query_read(collection_name=Collection.EXPENSES, aggregate=pipeline)
+    if expenses:
+        return expenses[0]
+    return {"average": 0, "periods_count": 0}

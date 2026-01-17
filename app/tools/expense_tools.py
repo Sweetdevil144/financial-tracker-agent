@@ -50,32 +50,15 @@ async def list_expenses(
 ) -> List[Expenses]:
     pipeline = [
         {
-            "$search": {
-                "index": "default",
-                "compound": {
-                    "filter": [
-                        {"equals": {"path": "user_id", "value": user_id}},
-                        {"equals": {"path": "deleted", "value": False}},
-                        {
-                            "text": {
-                                "path": "category",
-                                "query": category,
-                                "fuzzy": {},
-                            }
-                        },
-                        {
-                            "range": {
-                                "path": "amount",
-                                "gte": min_amount,
-                                "lte": max_amount,
-                            }
-                        },
-                        {"range": {"path": "date", "gte": start_date, "lte": end_date}},
-                    ]
-                },
-                "sort": {"amount": 1 if sort_by == "asc" else -1},
+            "$match": {
+                "user_id": user_id,
+                "deleted": False,
+                "date": {"$gte": start_date, "$lte": end_date},
+                "amount": {"$gte": min_amount, "$lte": max_amount},
+                "category": {"$regex": category, "$options": "i"},  # case-insensitive
             }
         },
+        {"$sort": {"amount": 1 if sort_by == "asc" else -1}},
         {"$limit": limit},
     ]
 
