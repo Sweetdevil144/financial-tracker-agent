@@ -1,4 +1,5 @@
 class Collection:
+    USERS = "users"
     EXPENSES = "expenses"
-    BUDGETS = "budget"
+    BUDGETS = "budgets"
     PREFERENCES = "preferences"

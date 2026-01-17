@@ -3,10 +3,10 @@ from typing import Any
 import jwt
 from fastapi import HTTPException, status
 from starlette.requests import Request
-from static import localization
-from utils.log import logger
 
 from app.config import config
+from app.static import localization
+from app.utils.log import logger
 
 
 def verify_jwt_token(token: str) -> dict[str, Any]:

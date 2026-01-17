@@ -1,6 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from app.config import config
+from app.utils.constants import Collection
 from app.utils.log import logger
 
 
@@ -64,14 +65,14 @@ class Database:
         db = Database.get_database()
         if db is None:
             return
-        await db["expenses"].create_index(
+        await db[Collection.EXPENSES].create_index(
             [("user_id", Database.ASCENDING), ("date", Database.DESCENDING)]
         )
-        await db["users"].create_index([("name", Database.ASCENDING)])
-        await db["preferences"].create_index(
+        await db[Collection.USERS].create_index([("name", Database.ASCENDING)])
+        await db[Collection.PREFERENCES].create_index(
             [("user_id", Database.ASCENDING), ("email", Database.ASCENDING)]
         )
-        await db["budgets"].create_index(
+        await db[Collection.BUDGETS].create_index(
             [("user_id", Database.ASCENDING), ("category", Database.ASCENDING)]
         )
         logger.info("Indexes created")

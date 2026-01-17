@@ -187,7 +187,6 @@ async def query_read(
     return await collection.aggregate(aggregate).to_list(None)
 
 
-@staticmethod
 async def list_collections() -> List[str]:
     """List all collections in the database."""
     db = Database.get_database()

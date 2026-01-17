@@ -32,7 +32,7 @@ async def get_budgets(user_id: str) -> List[Budgets]:
                 }
             },
             {
-                "$sort": {"total": -1},
+                "$sort": {"amount": -1},
             },
         ]
         res = await query_read(collection_name=Collection.BUDGETS, aggregate=pipeline)
