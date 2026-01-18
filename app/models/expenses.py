@@ -1,16 +1,16 @@
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel
 
 
-class CreateExpenseRequest(BaseModel):
+class CreateExpense(BaseModel):
     text: str
     amount: Optional[float] = None
     category: Optional[str] = None
     currency: Optional[str] = "USD"
 
 
-class ListExpenseRequest(BaseModel):
+class ListAll(BaseModel):
     user_id: str
     start_date: Optional[str] = None
     end_date: Optional[str] = None
@@ -20,6 +20,12 @@ class ListExpenseRequest(BaseModel):
     limit: Optional[int] = 100
     sort_by: Optional[str] = "asc"
 
-class ListIndividualExpenseRequest(BaseModel):
-    user_id: str
+class ListOne(BaseModel):
+    expense_id: str
+
+class UpdateOne(BaseModel):
+    expense_id: str
+    update_fields: dict[str, Any]
+
+class DeleteOne(BaseModel):
     expense_id: str

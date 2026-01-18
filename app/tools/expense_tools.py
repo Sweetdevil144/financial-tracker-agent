@@ -1,7 +1,8 @@
-from typing import Any, List, Mapping, Optional
+from typing import Any, List, Optional
 
 from fastapi import HTTPException
-from starlette.status import HTTP_400_BAD_REQUEST
+from pymongo.results import UpdateResult
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_502_BAD_GATEWAY
 
 from app.agents.agent import Agent
 from app.database.core_data import query_read, update_one
@@ -82,7 +83,7 @@ async def list_individual_expense(user_id: str, expense_id: str) -> Expenses:
 
 async def update_expense(
     user_id: str, expense_id: str, update_fields: dict[str, Any]
-) -> Mapping[str, Any] | None:
+) -> UpdateResult:
     try:
         filter = {"user_id": user_id, "_id": expense_id}
 
@@ -91,15 +92,15 @@ async def update_expense(
             filter=filter,
             update={"$set": update_fields},
         )
-        return res.raw_result
+        return res
     except Exception as e:
         raise HTTPException(
             detail=f"Failed to Update Expense : {str(e)}",
-            status_code=HTTP_400_BAD_REQUEST,
+            status_code=HTTP_502_BAD_GATEWAY,
         ) from e
 
 
-async def delete_expense(user_id: str, expense_id: str) -> Mapping[str, Any] | None:
+async def delete_expense(user_id: str, expense_id: str) -> UpdateResult:
     try:
         filter = {"user_id": user_id, "_id": expense_id, "deleted": False}
         res = await update_one(
@@ -108,7 +109,7 @@ async def delete_expense(user_id: str, expense_id: str) -> Mapping[str, Any] | N
             update={"$set": {"deleted": True}},
         )
 
-        return res.raw_result
+        return res
     except Exception as e:
         raise HTTPException(
             detail=f"Failed to Delete Expense : {str(e)}",
