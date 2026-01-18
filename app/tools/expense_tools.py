@@ -1,4 +1,4 @@
-from typing import Any, List, Mapping
+from typing import Any, List, Mapping, Optional
 
 from fastapi import HTTPException
 from starlette.status import HTTP_400_BAD_REQUEST
@@ -12,7 +12,7 @@ from app.utils.log import logger
 
 
 async def add_expense(user_id: str, text: str) -> ExpenseResponse:
-    if not text:
+    if not text.strip():
         logger.error("Error processing text")
         return ExpenseResponse(
             success=False,
@@ -40,13 +40,13 @@ async def add_expense(user_id: str, text: str) -> ExpenseResponse:
 
 async def list_expenses(
     user_id: str,
-    start_date: str,
-    end_date: str,
-    category: str,
-    min_amount: int,
-    max_amount: int,
-    limit: int,
-    sort_by: str = "asc",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    category: Optional[str] = None,
+    min_amount: Optional[int] = 0,
+    max_amount: Optional[int] = int("inf"),
+    limit: Optional[int] = 100,
+    sort_by: Optional[str] = "asc",
 ) -> List[Expenses]:
     pipeline = [
         {
@@ -55,7 +55,7 @@ async def list_expenses(
                 "deleted": False,
                 "date": {"$gte": start_date, "$lte": end_date},
                 "amount": {"$gte": min_amount, "$lte": max_amount},
-                "category": {"$regex": category, "$options": "i"},  # case-insensitive
+                "category": {"$regex": category, "$options": "i"},
             }
         },
         {"$sort": {"amount": 1 if sort_by == "asc" else -1}},
@@ -65,6 +65,19 @@ async def list_expenses(
     res = await query_read(collection_name=Collection.EXPENSES, aggregate=pipeline)
     logger.info(f"Query Read Expenses : {res}")
     return [Expenses(**doc) for doc in res]
+
+
+async def list_individual_expense(user_id: str, expense_id: str) -> Expenses:
+    pipeline = [
+        {"$match": {"user_id": user_id, "_id": expense_id}},
+        {"$limit": 1},
+    ]
+    res = await query_read(collection_name=Collection.EXPENSES, aggregate=pipeline)
+    logger.info(
+        f"Query Read Single Expense, expense_id: {expense_id}, response: {res[0]}"
+    )
+    expense = Expenses(**res[0])
+    return expense
 
 
 async def update_expense(

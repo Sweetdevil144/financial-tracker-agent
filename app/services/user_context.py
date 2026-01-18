@@ -45,6 +45,9 @@ def get_current_user(request: Request) -> str:
 class JWTAuthUser:
     def __init__(self) -> None:
         self.token_type = "bearer"
+    
+    async def __call__(self, request: Request) -> str:
+        return get_current_user(request)
 
     async def _validate_token(self, request: Request) -> str:
         logger.debug(f"Auth: Validating token for {request.method} {request.url.path}")

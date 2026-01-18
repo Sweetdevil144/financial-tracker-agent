@@ -2,13 +2,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from uvicorn import run
-
+from app.api.routes.analytics import
 from app.database.db import Database
-
+from app.api.routes.v1_router import v1_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """FastAPI lifespan: initialize and teardown for app."""
     _db = await Database.connect()
     yield
     await Database.disconnect()
@@ -24,8 +23,9 @@ def create_app():
 
     @app.get("/")
     async def root():
-        return {"message": "Hello World"}
+        return {"message": "Financial Tracker Agent"}
 
+    app.include_router(v1_router)
     return app
 
 
