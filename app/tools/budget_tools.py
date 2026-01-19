@@ -19,33 +19,29 @@ async def create_budget(budget_data: Budgets) -> InsertOneResult:
         raise HTTPException(
             detail=f"Failed to insert Budget : {str(e)}",
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        ) from e
 
 
-async def get_budgets(user_id: str) -> List[Budgets]:
+async def get_all_user_budgets(user_id: str) -> List[Budgets]:
     try:
         pipeline = [
-            {
-                "$match": {
-                    "user_id": user_id,
-                    "deleted": False,
-                }
-            },
-            {
-                "$sort": {"amount": -1},
-            },
+            {"$match": {"user_id": user_id, "deleted": False}},
+            {"$sort": {"created_at": -1}},
         ]
-        res = await query_read(collection_name=Collection.BUDGETS, aggregate=pipeline)
+        res = await query_read(
+            collection_name=Collection.BUDGETS,
+            aggregate=pipeline,
+        )
         return [Budgets(**doc) for doc in res]
     except Exception as e:
         raise HTTPException(
             detail=f"Failed to GET Budget : {str(e)}",
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        ) from e
 
 
 async def update_budget(
-    user_id: str, budget_id: str, update_fields: dict
+    user_id: str, budget_id: str, update_fields: dict[str, Any]
 ) -> UpdateResult:
     try:
         filters = {"user_id": user_id, "_id": budget_id, "deleted": False}
@@ -59,7 +55,7 @@ async def update_budget(
         raise HTTPException(
             detail=f"Failed to Update Budget : {str(e)}",
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        ) from e
 
 
 async def delete_budget(user_id: str, budget_id: str) -> UpdateResult:
@@ -75,7 +71,7 @@ async def delete_budget(user_id: str, budget_id: str) -> UpdateResult:
         raise HTTPException(
             detail=f"Failed to Update Budget : {str(e)}",
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        ) from e
 
 
 async def get_budget_status(user_id: str) -> List[dict[str, Any]]:
@@ -120,13 +116,4 @@ async def get_budget_status(user_id: str) -> List[dict[str, Any]]:
         raise HTTPException(
             detail=f"Failed to GET Budget Status : {str(e)}",
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-
-async def get_all_user_budgets(user_id: str) -> List[Budgets]:
-    pipeline = [
-        {"$match": {"user_id": user_id, "deleted": False}},
-        {"$sort": {"created_at": -1}},
-    ]
-    res = await query_read(collection_name=Collection.BUDGETS, aggregate=pipeline)
-    return [Budgets(**doc) for doc in res]
+        ) from e

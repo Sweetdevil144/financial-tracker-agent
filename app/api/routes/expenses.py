@@ -70,7 +70,7 @@ async def list_one(expense_id: str, user_id: str = Depends(auth)):
     except Exception as e:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND, detail=f"Failed to list expense {e}"
-        )
+        ) from e
 
 
 @router.put("/{id}")
@@ -89,7 +89,7 @@ async def update(request: UpdateOne, user_id: str = Depends(auth)):
     except Exception as e:
         raise HTTPException(
             status_code=HTTP_502_BAD_GATEWAY, detail=f"Failed to Update Expense {e}"
-        )
+        ) from e
 
 
 @router.delete("/{id}")
@@ -104,4 +104,4 @@ async def delete(request: DeleteOne, user_id: str = Depends(auth)):
     except Exception as e:
         raise HTTPException(
             status_code=HTTP_502_BAD_GATEWAY, detail=f"Failed to Delete Expense {e}"
-        )
+        ) from e

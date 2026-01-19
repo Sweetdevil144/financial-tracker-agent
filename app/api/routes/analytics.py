@@ -33,7 +33,7 @@ async def analyze(
     except Exception as e:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND, detail=f"Failed to analyze spendings {e}"
-        )
+        ) from e
 
 
 @router.get("/trends")
@@ -52,7 +52,7 @@ async def spending_trends(
     except Exception as e:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND, detail=f"Failed to get spendings trends {e}"
-        )
+        ) from e
 
 
 @router.get("/average")
@@ -69,7 +69,7 @@ async def average_spendings(
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail=f"Failed to get average spendings {e}",
-        )
+        ) from e
 
 
 @router.get("/top")
@@ -91,4 +91,4 @@ async def top_merchants(
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail=f"Failed to get average spendings {e}",
-        )
+        ) from e
