@@ -44,21 +44,34 @@ async def list_expenses(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     category: Optional[str] = None,
-    min_amount: Optional[int] = 0,
-    max_amount: Optional[int] = int("inf"),
+    min_amount: Optional[int] = None,
+    max_amount: Optional[int] = None,
     limit: Optional[int] = 100,
     sort_by: Optional[str] = "asc",
 ) -> List[Expenses]:
+    match_query = {
+        "user_id": user_id,
+        "deleted": False,
+    }
+    if start_date and end_date:
+        match_query["date"] = {"$gte": start_date, "$lte": end_date}
+    elif start_date:
+        match_query["date"] = {"$gte": start_date}
+    elif end_date:
+        match_query["date"] = {"$lte": end_date}
+
+    if category:
+        match_query["category"] = {"$regex": category, "$options": "i"}
+    
+    if not min_amount:
+        min_amount = 0
+    if not max_amount:
+        max_amount = 999999999
+    if min_amount > 0 or max_amount < 999999999:
+        match_query["amount"] = {"$gte": min_amount, "$lte": max_amount}
+
     pipeline = [
-        {
-            "$match": {
-                "user_id": user_id,
-                "deleted": False,
-                "date": {"$gte": start_date, "$lte": end_date},
-                "amount": {"$gte": min_amount, "$lte": max_amount},
-                "category": {"$regex": category, "$options": "i"},
-            }
-        },
+        {"$match": match_query},
         {"$sort": {"amount": 1 if sort_by == "asc" else -1}},
         {"$limit": limit},
     ]

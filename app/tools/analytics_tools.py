@@ -1,4 +1,5 @@
-from typing import Any, List
+from datetime import datetime, timedelta, timezone
+from typing import Any, List, Optional
 
 from app.database.core_data import query_read
 from app.utils.constants import Collection
@@ -6,8 +7,16 @@ from app.utils.enums import BudgetPeriod
 
 
 async def analyze_spendings(
-    user_id: str, start_date: str, end_date: str
+    user_id: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
 ) -> List[dict[str, Any]]:
+    if end_date is None:
+        end_date = str(datetime.now(timezone.utc))
+
+    if start_date is None:
+        start_date = str(datetime.now(timezone.utc) - timedelta(days=365))
+
     pipeline = [
         {
             "$match": {
@@ -38,8 +47,16 @@ async def analyze_spendings(
 
 
 async def get_top_merchants(
-    user_id: str, start_date: str, end_date: str, limit: int = 10
+    user_id: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 10,
 ) -> List[dict[str, Any]]:
+    if end_date is None:
+        end_date = str(datetime.now(timezone.utc))
+
+    if start_date is None:
+        start_date = str(datetime.now(timezone.utc) - timedelta(days=365))
     pipeline = [
         {
             "$match": {
@@ -63,8 +80,16 @@ async def get_top_merchants(
 
 
 async def get_spending_trends(
-    user_id: str, start_date: str, end_date: str
+    user_id: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
 ) -> List[dict[str, Any]]:
+    if end_date is None:
+        end_date = str(datetime.now(timezone.utc))
+
+    if start_date is None:
+        start_date = str(datetime.now(timezone.utc) - timedelta(days=365))
+
     pipeline = [
         {
             "$match": {
@@ -88,7 +113,9 @@ async def get_spending_trends(
     return await query_read(collection_name=Collection.EXPENSES, aggregate=pipeline)
 
 
-async def get_average_spending(user_id: str, period: BudgetPeriod):
+async def get_average_spending(
+    user_id: str, period: Optional[BudgetPeriod] = BudgetPeriod.YEARLY
+):
     if period == BudgetPeriod.YEARLY:
         group_id = {"year": {"$year": {"$dateFromString": {"dateString": "$date"}}}}
     elif period == BudgetPeriod.MONTHLY:
