@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_502_BAD_GATEWAY
 
-from app.models.expenses import CreateExpense, DeleteOne, UpdateOne
+from app.models.expenses import CreateExpense, UpdateOne
 from app.services.user_context import JWTAuthUser
 from app.tools.expense_tools import (
     add_expense,
@@ -60,7 +60,7 @@ async def list(
         ) from e
 
 
-@router.get("/{id}")
+@router.get("/{expense_id}")
 async def list_one(expense_id: str, user_id: str = Depends(auth)):
     try:
         expense = await list_individual_expense(user_id=user_id, expense_id=expense_id)
@@ -73,12 +73,12 @@ async def list_one(expense_id: str, user_id: str = Depends(auth)):
         ) from e
 
 
-@router.put("/{id}")
-async def update(request: UpdateOne, user_id: str = Depends(auth)):
+@router.put("/{expense_id}")
+async def update(request: UpdateOne, expense_id: str, user_id: str = Depends(auth)):
     try:
         res = await update_expense(
             user_id=user_id,
-            expense_id=request.expense_id,
+            expense_id=expense_id,
             update_fields=request.update_fields,
         )
         return {
@@ -92,10 +92,10 @@ async def update(request: UpdateOne, user_id: str = Depends(auth)):
         ) from e
 
 
-@router.delete("/{id}")
-async def delete(request: DeleteOne, user_id: str = Depends(auth)):
+@router.delete("/{expense_id}")
+async def delete(expense_id: str, user_id: str = Depends(auth)):
     try:
-        res = await delete_expense(user_id=user_id, expense_id=request.expense_id)
+        res = await delete_expense(user_id=user_id, expense_id=expense_id)
         return {
             "success": res.acknowledged,
             "matched": res.matched_count,

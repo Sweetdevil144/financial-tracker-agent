@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.status import HTTP_400_BAD_REQUEST
 
-from app.models.budgets import DeleteOne, UpdateOne
+from app.models.budgets import UpdateOne
 from app.models.collections import Budgets
 from app.services.user_context import JWTAuthUser
 from app.tools.budget_tools import (
@@ -12,7 +12,7 @@ from app.tools.budget_tools import (
     update_budget,
 )
 
-router = APIRouter(prefix="/expenses")
+router = APIRouter(prefix="/budgets")
 
 auth = JWTAuthUser()
 
@@ -47,17 +47,18 @@ async def get_budgets(user_id: str = Depends(auth)):
         ) from e
 
 
-@router.put("/")
-async def update(request: UpdateOne, user_id: str = Depends(auth)):
+@router.put("/{budget_id}")
+async def update(request: UpdateOne, budget_id: str, user_id: str = Depends(auth)):
     try:
         res = await update_budget(
             user_id=user_id,
-            budget_id=request.budget_id,
+            budget_id=budget_id,
             update_fields=request.update_fields,
         )
         return {
-            "success": True if res.did_upsert else False,
-            "res": res,
+            "success": res.modified_count > 0,
+            "matched": res.matched_count,
+            "modified": res.modified_count,
         }
     except Exception as e:
         raise HTTPException(
@@ -65,16 +66,17 @@ async def update(request: UpdateOne, user_id: str = Depends(auth)):
         ) from e
 
 
-@router.delete("/")
-async def delete(request: DeleteOne, user_id: str = Depends(auth)):
+@router.delete("/{budget_id}")
+async def delete(budget_id: str, user_id: str = Depends(auth)):
     try:
         res = await delete_budget(
             user_id=user_id,
-            budget_id=request.budget_id,
+            budget_id=budget_id,
         )
         return {
-            "success": True if res.did_upsert else False,
-            "res": res,
+            "success": res.modified_count > 0,
+            "matched": res.matched_count,
+            "modified": res.modified_count,
         }
     except Exception as e:
         raise HTTPException(

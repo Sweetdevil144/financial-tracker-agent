@@ -10,8 +10,4 @@ class CreateExpense(BaseModel):
     currency: Optional[str] = "USD"
 
 class UpdateOne(BaseModel):
-    expense_id: str
     update_fields: dict[str, Any]
-
-class DeleteOne(BaseModel):
-    expense_id: str

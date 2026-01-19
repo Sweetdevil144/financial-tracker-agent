@@ -1,37 +1,31 @@
-# from app.models.agent import ExpenseExtraction
 from typing import Any, Type
 
 from langchain.messages import HumanMessage, SystemMessage
+from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import AIMessage
-from langchain_openai import AzureChatOpenAI
 from pydantic import BaseModel, SecretStr
 
 from app.config import config
+from app.utils.log import logger
 
 
 class LLMService:
     def __init__(self):
-        self.deployment_name = config.AZURE_OPENAI_CHAT_DEPLOYMENT_NAME
-        self.model = config.AZURE_OPENAI_CHAT_DEPLOYMENT_NAME
-        self.api_key = config.AZURE_OPENAI_API_KEY
-        self.api_version = config.AZURE_OPENAI_API_VERSION
-        self.chat_endpoint = config.AZURE_OPENAI_ENDPOINT
+        self.api_key = config.ANTHROPIC_API_KEY
+        if not self.api_key:
+            logger.error("No API KEY detected. Closing agent connection")
+            return
+
         self.db_name = config.DATABASE_NAME
         self.db_url = config.MONGO_URI
-        self.agent = AzureChatOpenAI(
-            name=self.deployment_name,
-            model=self.model,
+        self.agent = ChatAnthropic(
+            model_name="claude-sonnet-4-20250514",
             api_key=SecretStr(self.api_key),
-            azure_endpoint=self.chat_endpoint,
-            api_version=self.api_version,
-            verbose=True,
             temperature=0.7,
             max_retries=2,
-            reasoning={
-                "effort": "medium",  # Can be "low", "medium", or "high"
-                "summary": "auto",  # Can be "auto", "concise", or "detailed"
-            },
-            # Future params TBD
+            timeout=60,
+            stop=None,
+            max_tokens_to_sample=4096
         )
 
     async def chat(
