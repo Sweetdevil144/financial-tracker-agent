@@ -30,4 +30,4 @@ LANGCHAIN_PROJECT = get_secret("LANGCHAIN_PROJECT", "financial_agent")
 LANGCHAIN_ENDPOINT = get_secret("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
 
 JWT_SECRET = get_secret("JwtSecret")
-ENVIRONMENT = get_secret("ENVIRONMENT")
+ENVIRONMENT = get_secret("Environment")

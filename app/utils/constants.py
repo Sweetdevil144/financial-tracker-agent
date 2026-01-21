@@ -3,3 +3,4 @@ class Collection:
     EXPENSES = "expenses"
     BUDGETS = "budgets"
     PREFERENCES = "preferences"
+    TOKENS = "tokens"

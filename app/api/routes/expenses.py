@@ -13,7 +13,7 @@ from app.tools.expense_tools import (
     update_expense,
 )
 
-router = APIRouter(prefix="/expenses")
+router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
 auth = JWTAuthUser()
 

@@ -12,7 +12,7 @@ from app.tools.analytics_tools import (
 )
 from app.utils.enums import BudgetPeriod
 
-router = APIRouter(prefix="/analytics")
+router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 auth = JWTAuthUser()
 

@@ -15,7 +15,7 @@ from app.tools.budget_tools import (
     update_budget,
 )
 
-router = APIRouter(prefix="/budgets")
+router = APIRouter(prefix="/budgets", tags=["Budgets"])
 
 auth = JWTAuthUser()
 

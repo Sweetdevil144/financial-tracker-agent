@@ -10,3 +10,6 @@ word2number>=1.0
 dateparser>=1.2.0
 motor>=3.6.0                                                                                                                                         
 pydantic>=2.0.0
+PyJWT>=2.8.0
+pytest>=8.0.0
+pytest-asyncio>=1.0.0
