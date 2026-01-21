@@ -45,7 +45,7 @@ def get_current_user(request: Request) -> str:
 class JWTAuthUser:
     def __init__(self) -> None:
         self.token_type = "bearer"
-    
+
     async def __call__(self, request: Request) -> str:
         return get_current_user(request)
 

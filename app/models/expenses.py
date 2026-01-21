@@ -9,5 +9,6 @@ class CreateExpense(BaseModel):
     category: Optional[str] = None
     currency: Optional[str] = "USD"
 
+
 class UpdateOne(BaseModel):
     update_fields: dict[str, Any]

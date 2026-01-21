@@ -1,6 +1,6 @@
-EXCEPTION_TOKEN_INVALID = 'Invalid access token'
-EXCEPTION_TOKEN_EXPIRED = 'Access token expired'
-EXCEPTION_AUTHORIZATION_HEADER_INVALID = 'Authorization header invalid'
-EXCEPTION_FORBIDDEN_ACCESS = 'Access denied'
-EXCEPTION_ACCOUNT_INACTIVE = 'Account is inactive'
-EXCEPTION_ACCOUNT_RESTRICTED = 'Account is restricted'
+EXCEPTION_TOKEN_INVALID = "Invalid access token"
+EXCEPTION_TOKEN_EXPIRED = "Access token expired"
+EXCEPTION_AUTHORIZATION_HEADER_INVALID = "Authorization header invalid"
+EXCEPTION_FORBIDDEN_ACCESS = "Access denied"
+EXCEPTION_ACCOUNT_INACTIVE = "Account is inactive"
+EXCEPTION_ACCOUNT_RESTRICTED = "Account is restricted"

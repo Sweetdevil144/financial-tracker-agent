@@ -17,4 +17,3 @@ class CreateBudget(BaseModel):
 
 class UpdateOne(BaseModel):
     update_fields: dict[str, Any]
-

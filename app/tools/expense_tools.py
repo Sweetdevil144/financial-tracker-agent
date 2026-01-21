@@ -62,7 +62,7 @@ async def list_expenses(
 
     if category:
         match_query["category"] = {"$regex": category, "$options": "i"}
-    
+
     if not min_amount:
         min_amount = 0
     if not max_amount:
