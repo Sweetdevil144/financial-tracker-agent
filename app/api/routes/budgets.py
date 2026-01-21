@@ -1,7 +1,10 @@
+from datetime import datetime, timezone
+from uuid import uuid4
+
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.status import HTTP_400_BAD_REQUEST
 
-from app.models.budgets import UpdateOne
+from app.models.budgets import CreateBudget, UpdateOne
 from app.models.collections import Budgets
 from app.services.user_context import JWTAuthUser
 from app.tools.budget_tools import (
@@ -17,18 +20,40 @@ router = APIRouter(prefix="/budgets")
 auth = JWTAuthUser()
 
 
+@router.get("/status")
+async def get_status(user_id: str = Depends(auth)):
+    try:
+        res = await get_budget_status(user_id)
+        return {"status": res}
+    except Exception as e:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST, detail=f"Failed to get Budget Status {e}"
+        ) from e
+
+
 @router.post("/")
 async def create(
-    request: Budgets,
+    request: CreateBudget,
     user_id: str = Depends(auth),
 ):
     try:
-        request.user_id = user_id
-        res = await create_budget(request)
+        budget = Budgets(
+            _id=str(uuid4()),
+            user_id=user_id,
+            category=request.category,
+            amount=request.amount,
+            currency=request.currency,
+            period=request.period,
+            start_date=request.start_date,
+            end_date=request.end_date,
+            description=request.description,
+            created_at=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        )
+        res = await create_budget(budget)
 
         return {
             "success": True if res.inserted_id else False,
-            "response": res,
+            "budget_id": str(res.inserted_id) if res.inserted_id else None,
         }
     except Exception as e:
         raise HTTPException(
@@ -78,18 +103,6 @@ async def delete(budget_id: str, user_id: str = Depends(auth)):
             "matched": res.matched_count,
             "modified": res.modified_count,
         }
-    except Exception as e:
-        raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST, detail=f"Failed to Delete Budget {e}"
-        ) from e
-
-
-@router.get("/status")
-async def get_status(user_id: str = Depends(auth)):
-    try:
-        res = await get_budget_status(user_id)
-
-        return {"status": res}
     except Exception as e:
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST, detail=f"Failed to Delete Budget {e}"

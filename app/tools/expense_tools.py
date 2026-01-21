@@ -81,24 +81,24 @@ async def list_expenses(
     return [Expenses(**doc) for doc in res]
 
 
-async def list_individual_expense(user_id: str, expense_id: str) -> Expenses:
+async def list_individual_expense(user_id: str, expense_id: str) -> Expenses | None:
     pipeline = [
-        {"$match": {"user_id": user_id, "_id": expense_id}},
+        {"$match": {"user_id": user_id, "_id": expense_id, "deleted": False}},
         {"$limit": 1},
     ]
     res = await query_read(collection_name=Collection.EXPENSES, aggregate=pipeline)
-    logger.info(
-        f"Query Read Single Expense, expense_id: {expense_id}, response: {res[0]}"
-    )
-    expense = Expenses(**res[0])
-    return expense
+    if not res:
+        logger.warning(f"Expense not found: expense_id={expense_id}, user_id={user_id}")
+        return None
+    logger.info(f"Query Read Single Expense, expense_id: {expense_id}")
+    return Expenses(**res[0])
 
 
 async def update_expense(
     user_id: str, expense_id: str, update_fields: dict[str, Any]
 ) -> UpdateResult:
     try:
-        filter = {"user_id": user_id, "_id": expense_id}
+        filter = {"user_id": user_id, "_id": expense_id, "deleted": False}
 
         res = await update_one(
             collection_name=Collection.EXPENSES,

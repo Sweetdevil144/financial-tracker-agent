@@ -12,10 +12,10 @@ async def analyze_spendings(
     end_date: Optional[str] = None,
 ) -> List[dict[str, Any]]:
     if end_date is None:
-        end_date = str(datetime.now(timezone.utc))
+        end_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     if start_date is None:
-        start_date = str(datetime.now(timezone.utc) - timedelta(days=365))
+        start_date = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%d")
 
     pipeline = [
         {
@@ -53,10 +53,10 @@ async def get_top_merchants(
     limit: int = 10,
 ) -> List[dict[str, Any]]:
     if end_date is None:
-        end_date = str(datetime.now(timezone.utc))
+        end_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     if start_date is None:
-        start_date = str(datetime.now(timezone.utc) - timedelta(days=365))
+        start_date = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%d")
     pipeline = [
         {
             "$match": {
@@ -85,10 +85,10 @@ async def get_spending_trends(
     end_date: Optional[str] = None,
 ) -> List[dict[str, Any]]:
     if end_date is None:
-        end_date = str(datetime.now(timezone.utc))
+        end_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     if start_date is None:
-        start_date = str(datetime.now(timezone.utc) - timedelta(days=365))
+        start_date = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%d")
 
     pipeline = [
         {

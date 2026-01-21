@@ -64,9 +64,13 @@ async def list(
 async def list_one(expense_id: str, user_id: str = Depends(auth)):
     try:
         expense = await list_individual_expense(user_id=user_id, expense_id=expense_id)
-        return {
-            "expense": expense,
-        }
+        if expense is None:
+            raise HTTPException(
+                status_code=HTTP_404_NOT_FOUND, detail=f"Expense {expense_id} not found"
+            )
+        return {"expense": expense}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND, detail=f"Failed to list expense {e}"
