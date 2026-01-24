@@ -129,3 +129,13 @@ async def revoke_all_user_tokens(user_id: str) -> int:
         update={"$set": {"revoked": True}},
     )
     return result.modified_count
+
+
+async def get_user_by_id(user_id: str) -> Optional[User]:
+    user_doc = await read_one(
+        collection_name=Collection.USERS,
+        data_filter={"_id": user_id, "deleted": False},
+    )
+    if not user_doc:
+        return None
+    return User(**user_doc)

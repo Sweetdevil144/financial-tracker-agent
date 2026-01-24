@@ -21,7 +21,7 @@ class ExpenseExtraction(BaseModel):
 
 
 class ExpenseValidation(BaseModel):
-    is_valid: bool
+    is_valid: bool = False
     errors: Optional[List[str]] = Field(
         default_factory=list,
         description="List of errors occuring during expense validation",

@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from pymongo.results import UpdateResult
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_502_BAD_GATEWAY
 
-from app.agents.agent import Agent
+from app.agents.agent import agent
 from app.database.core_data import query_read, update_one
 from app.models.agent import ExpenseResponse
 from app.models.collections import Expenses
@@ -21,7 +21,6 @@ async def add_expense(user_id: str, text: str) -> ExpenseResponse:
             expense_id=None,
         )
     try:
-        agent = Agent()
 
         parsed_expense = await agent.parse_expense(user_prompt=text, user_id=user_id)
         if not parsed_expense.user_id:

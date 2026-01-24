@@ -1,8 +1,7 @@
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
-
 from app.utils.enums import BudgetPeriod, Currencies
+from pydantic import BaseModel, Field
 
 
 class Expenses(BaseModel):
@@ -22,7 +21,10 @@ class Expenses(BaseModel):
     created_at: str
     tags: List[str] = Field(default_factory=list)
     notes: Optional[str] = None
-    model_config = {"populate_by_name": True}
+    model_config = {
+        "populate_by_name": True,
+        "use_enum_values": True,
+    }
 
 
 class Budgets(BaseModel):
@@ -41,7 +43,10 @@ class Budgets(BaseModel):
     end_date: str
     created_at: str
     description: Optional[str] = None
-    model_config = {"populate_by_name": True}
+    model_config = {
+        "populate_by_name": True,
+        "use_enum_values": True,
+    }
 
 
 class UserPreferences(BaseModel):
@@ -55,4 +60,7 @@ class UserPreferences(BaseModel):
     categories_list: List[str]
     timezone: str
     timezone_offset: Optional[str] = None
-    model_config = {"populate_by_name": True}
+    model_config = {
+        "populate_by_name": True,
+        "use_enum_values": True,
+    }

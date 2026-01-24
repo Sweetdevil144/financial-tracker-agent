@@ -1,1 +1,1 @@
-clear && uvicorn app.main:app
+clear && uvicorn app.main:app --reload --port 8000

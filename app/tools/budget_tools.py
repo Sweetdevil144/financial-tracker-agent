@@ -13,7 +13,7 @@ async def create_budget(budget_data: Budgets) -> InsertOneResult:
     try:
         return await insert_one(
             collection_name=Collection.BUDGETS,
-            document=budget_data.model_dump(by_alias=True),
+            document=budget_data.model_dump(by_alias=True, mode="json"),
         )
     except Exception as e:
         raise HTTPException(

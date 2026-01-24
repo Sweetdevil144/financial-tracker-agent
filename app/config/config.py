@@ -31,3 +31,4 @@ LANGCHAIN_ENDPOINT = get_secret("LANGCHAIN_ENDPOINT", "https://api.smith.langcha
 
 JWT_SECRET = get_secret("JwtSecret")
 ENVIRONMENT = get_secret("Environment")
+PORT = get_secret("PORT", "8000")
