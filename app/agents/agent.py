@@ -63,7 +63,7 @@ class Agent:
                 res = await db["expenses"].insert_one(
                     expense.model_dump(by_alias=True, mode="json")
                 )
-                if res.acknowledged:
+                if res.inserted_id:
                     return ExpenseResponse(
                         expense_id=expense_id,
                         success=True,
